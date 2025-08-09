@@ -1,0 +1,19 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: delivery-dispatch
+  main:
+    allow-circular-references: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+kafka:
+  bootstrap-servers: localhost:29092
+
+

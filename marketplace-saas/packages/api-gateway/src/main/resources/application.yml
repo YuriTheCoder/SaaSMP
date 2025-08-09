@@ -1,0 +1,76 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      mvc:
+        routes: []
+      default-filters:
+        - RemoveRequestHeader=Cookie
+        - RequestHeaderSize=16KB
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      routes:
+        - id: identity
+          uri: http://localhost:8081
+          predicates:
+            - Path=/v1/auth/**, /v1/users/**
+          filters:
+            - PreserveHostHeader
+        - id: orders
+          uri: http://localhost:8082
+          predicates:
+            - Path=/v1/carts/**, /v1/orders/**
+        - id: payments
+          uri: http://localhost:8083
+          predicates:
+            - Path=/v1/payment-intents/**, /v1/refunds/**, /v1/webhooks/**
+        - id: delivery
+          uri: http://localhost:8084
+          predicates:
+            - Path=/v1/deliveries/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  tracing:
+    sampling:
+      probability: 1.0
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: redis-rl
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cloud:
+    gateway:
+      filter:
+        request-rate-limiter:
+          enabled: true
+          deny-empty-key: true
+          empty-key-status-code: 429
+      routes:
+        - id: orders
+          uri: http://localhost:8082
+          predicates:
+            - Path=/v1/carts/**, /v1/orders/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@tenantKeyResolver}"
+
+

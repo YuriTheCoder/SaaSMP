@@ -1,0 +1,97 @@
+openapi: 3.1.0
+info:
+  title: Payments API
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+paths:
+  /v1/payment-intents:
+    post:
+      operationId: createPaymentIntent
+      security:
+        - OAuth2: [payments.write]
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PaymentIntentCreate' }
+            examples:
+              pix:
+                value:
+                  amount: 2590
+                  currency: BRL
+                  method: { type: pix }
+                  orderId: ord_123
+      responses:
+        '201':
+          description: Created
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentIntent' }
+        '409':
+          $ref: '#/components/responses/IdempotencyConflict'
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://idp.example.com/oauth2/authorize
+          tokenUrl: https://idp.example.com/oauth2/token
+          scopes:
+            payments.write: Create intents and confirm
+  responses:
+    IdempotencyConflict:
+      description: The same Idempotency-Key was used with a different payload
+      content:
+        application/problem+json:
+          schema:
+            type: object
+            properties:
+              type: { type: string }
+              title: { type: string }
+              status: { type: integer }
+              detail: { type: string }
+              instance: { type: string }
+              traceId: { type: string }
+  schemas:
+    PaymentMethod:
+      oneOf:
+        - $ref: '#/components/schemas/CardMethod'
+        - $ref: '#/components/schemas/PixMethod'
+      discriminator:
+        propertyName: type
+    CardMethod:
+      type: object
+      properties:
+        type: { const: card }
+        token: { type: string }
+    PixMethod:
+      type: object
+      properties:
+        type: { const: pix }
+    PaymentIntentCreate:
+      type: object
+      required: [amount, currency, method, orderId]
+      properties:
+        amount: { type: integer }
+        currency: { type: string }
+        method: { $ref: '#/components/schemas/PaymentMethod' }
+        orderId: { type: string }
+    PaymentIntent:
+      type: object
+      properties:
+        id: { type: string }
+        status: { type: string }
+        amount: { type: integer }
+        currency: { type: string }
+        method: { $ref: '#/components/schemas/PaymentMethod' }
+
+
