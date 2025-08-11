@@ -12,14 +12,14 @@ import java.util.UUID;
 @RequestMapping("/v1/carts")
 public class CartController {
 
-    @PostMapping
+    @PostMapping({"", "/"})
     public ResponseEntity<Map<String, String>> createCart() {
         String id = UUID.randomUUID().toString();
         return ResponseEntity.created(URI.create("/v1/carts/" + id + "/items"))
                 .body(Map.of("id", id, "items", "/v1/carts/" + id + "/items"));
     }
 
-    @PostMapping("/{id}/items")
+    @PostMapping({"/{id}/items", "/{id}/items/"})
     public ResponseEntity<Map<String, Object>> addItem(@PathVariable("id") String id, @Valid @RequestBody Map<String, Object> body) {
         if (!body.containsKey("sku") || !body.containsKey("qty")) {
             return ResponseEntity.unprocessableEntity().body(Map.of(

@@ -22,6 +22,14 @@ public class RequestSizeFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        long contentLength = request.getContentLengthLong();
+        if (contentLength > 0 && contentLength > maxBytes) {
+            response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
+            response.setHeader(HttpHeaders.CONTENT_TYPE, "application/problem+json");
+            response.getWriter().write("{\"type\":\"about:blank\",\"title\":\"Payload too large\",\"status\":413}");
+            return;
+        }
+        // Fallback to header check if content-length is not provided by the container
         String lengthHeader = request.getHeader(HttpHeaders.CONTENT_LENGTH);
         if (lengthHeader != null) {
             try {

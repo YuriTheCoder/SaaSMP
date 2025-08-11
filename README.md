@@ -77,6 +77,23 @@ mvn -pl packages/payments spring-boot:run
 mvn -pl packages/delivery-dispatch spring-boot:run
 ```
 
+### Frontend (Vite)
+- App web em `apps/web` (React + Vite)
+- Envia o header obrigatório `X-Tenant-Id` (defina no topo direito)
+- Proxy local para o Gateway (http://localhost:8080)
+
+Executar com Docker (porta 5173):
+```
+docker compose up -d web
+```
+
+Executar em modo dev:
+```
+cd apps/web
+npm install
+npm run dev
+```
+
 ### Executar localmente sem Docker
 - Para executar apenas Identity e Gateway, nenhuma dependência externa é necessária.
 - Identity referencia um DataSource no `application.yml`. Se você quiser rodar sem Postgres, pode desabilitar auto-config JPA/Datasource com:

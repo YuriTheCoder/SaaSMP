@@ -6,13 +6,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {TestSecurityConfig.class}, properties = {
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration",
         "security.request.max-bytes=10"
 })
+@ActiveProfiles("test")
 class OrdersSecurityNegativeTest {
 
     @LocalServerPort
@@ -47,9 +49,11 @@ class OrdersSecurityNegativeTest {
         HttpHeaders h = new HttpHeaders();
         h.set("X-Tenant-Id", "test-tenant");
         h.setContentType(MediaType.APPLICATION_JSON);
-        // set a fake large content-length to trigger RequestSizeFilter
-        h.set(HttpHeaders.CONTENT_LENGTH, "999999");
-        ResponseEntity<String> res = rest.exchange(url("/v1/carts"), HttpMethod.POST, new HttpEntity<>("{}", h), String.class);
+        // build an actual payload larger than the configured 10 bytes
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 2048; i++) sb.append('A');
+        String bigPayload = sb.toString();
+        ResponseEntity<String> res = rest.exchange(url("/v1/carts"), HttpMethod.POST, new HttpEntity<>(bigPayload, h), String.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
     }
 }

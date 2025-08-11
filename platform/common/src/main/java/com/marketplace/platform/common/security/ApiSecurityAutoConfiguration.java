@@ -1,8 +1,12 @@
 package com.marketplace.platform.common.security;
 
+import com.marketplace.platform.common.web.RequestIdFilter;
+import com.marketplace.platform.common.web.RequestSizeFilter;
+import com.marketplace.platform.common.web.TenantFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
@@ -16,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @AutoConfiguration
+@Import({TenantFilter.class, RequestIdFilter.class, RequestSizeFilter.class})
 public class ApiSecurityAutoConfiguration {
 
     @Bean

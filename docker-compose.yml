@@ -33,4 +33,13 @@ services:
     ports:
       - "6379:6379"
 
+  web:
+    build:
+      context: ./apps/web
+    ports:
+      - "5173:80"
+    environment:
+      - NODE_ENV=production
+    depends_on: []
+
 
